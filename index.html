@@ -328,19 +328,18 @@ document.addEventListener("pointerdown", (e) => {
 
 
 // ... dentro de window.onload ...
-let locationsReady = false;
-let isResuming = true; 
+// ... dentro de window.onload ...
+// --- Persistencia V2: Blindaje para Móviles ---
 
-// 1. Configuración de inicio: Encadenamos las promesas correctamente
-// --- Lógica de Persistencia con Caché de Locaciones ---
-// --- Persistencia con Blindaje Total ---
+let locationsReady = false;
+let isResuming = true; // Bloqueo de escritura inicial
 
 book.ready.then(() => {
     const key = book.key() + "-locations";
     const storedLocations = localStorage.getItem(key);
     
     if (storedLocations) {
-        console.log("🚀 Cargando locaciones desde caché...");
+        console.log("🚀 Cargando desde caché...");
         try {
             return book.locations.load(storedLocations);
         } catch (e) {
@@ -351,38 +350,53 @@ book.ready.then(() => {
     }
 }).then(() => {
     locationsReady = true;
-    console.log("✅ Locaciones listas.");
-
-    // ESPERAMOS a que el visor esté listo para mostrar algo
+    console.log("✅ 1. Locaciones listas.");
     return rendition.started; 
 }).then(() => {
     const lastLocation = localStorage.getItem("lastBookLocation");
     
     if (lastLocation) {
-        console.log("📍 Saltando a posición guardada:", lastLocation);
-        // El secreto: esperar a que el display termine de verdad
+        console.log("📍 2. Saltando a posición:", lastLocation);
+        // FORZAMOS el display y esperamos a que termine
         return rendition.display(lastLocation);
     } else {
-        isResuming = false;
         return rendition.display();
     }
 }).then(() => {
-    // Forzamos el cálculo manual una vez el visor "aterrizó"
+    // 3. UNA VEZ TERMINADO EL SALTO, calculamos el % inicial
     const currentCfi = rendition.currentLocation().start.cfi;
     actualizarPorcentajeManual(currentCfi);
     
-    // Damos un margen para que no se autograbé el inicio por error
+    // 4. EL SECRETO: No habilitamos el guardado inmediatamente.
+    // Esperamos 2 segundos para que el celular termine de procesar el render.
     setTimeout(() => {
         isResuming = false; 
-        console.log("💾 Sistema estable y guardado activo.");
-    }, 1500);
+        console.log("💾 3. Sistema activo. Ya puedes navegar.");
+    }, 2000); 
+});
+
+// Evento de navegación
+rendition.on("relocated", (location) => {
+    const cfi = location.start.cfi;
+
+    // Solo guardamos si YA NO estamos reanudando
+    if (!isResuming && cfi) {
+        localStorage.setItem("lastBookLocation", cfi);
+        console.log("💾 Guardando posición actual...");
+    }
+
+    // El porcentaje siempre intenta actualizarse si las locaciones existen
+    if (locationsReady) {
+        actualizarPorcentajeManual(cfi);
+    }
 });
 
 function generarYGuardarLocaciones(key) {
-    console.log("⏳ Generando mapa del libro...");
+    console.log("⏳ Generando mapa...");
     return book.locations.generate(1024).then(() => {
-        localStorage.setItem(key, book.locations.save());
-        console.log("✅ Nuevo caché creado.");
+        const saved = book.locations.save();
+        localStorage.setItem(key, saved);
+        return saved;
     });
 }
 
