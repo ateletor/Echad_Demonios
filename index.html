@@ -59,9 +59,12 @@
     flex: 1; /* Ocupa todo el espacio restante */
     width: 100%;
     max-width: 100%; /* Evita que se salga de la pantalla */
-    background: #c3c3c3;
+    background: #fff;
 	box-shadow: 0 0 20px rgba(0,0,0,0.2);
 	margin: 0 auto;
+	height: 80vh;
+	overflow: scroll; /* El visor interno se encarga del scroll/paginación */
+    position: relative;
 }
 
         .nav-btn {
@@ -81,13 +84,7 @@
         }
 
         /* Contenedor del Libro */
-        #viewer {
-            width: 100vw;
-            height: calc(100vh - 60px); /* Resta la altura de la barra */
-            max-width: 900px;
-            background: white;
-            
-        }
+
 
         /* Indicador de carga */
         #loading {
@@ -130,6 +127,11 @@
     flex-wrap: nowrap;   /* Evita el salto de línea */
     justify-content: space-between;
     align-items: center;
+}
+
+#viewer iframe {
+    width: 100% !important;
+    height: 100% !important;
 }
     </style>
 </head>
@@ -328,7 +330,6 @@ document.addEventListener("pointerdown", (e) => {
 
 
 // ... dentro de window.onload ...
-// ... dentro de window.onload ...
 // --- Persistencia V2: Blindaje para Móviles ---
 
 let locationsReady = false;
@@ -379,13 +380,16 @@ book.ready.then(() => {
 rendition.on("relocated", (location) => {
     const cfi = location.start.cfi;
 
-    // Solo guardamos si YA NO estamos reanudando
-    if (!isResuming && cfi) {
+    // 1. Lógica de Guardado (Solo si no estamos reanudando y no es 0)
+    // Esto evita que la carga inicial pise tu progreso con un 0%
+    const currentPercent = book.locations.percentageFromCfi(cfi);
+    if (!isResuming && cfi && currentPercent > 0) {
         localStorage.setItem("lastBookLocation", cfi);
-        console.log("💾 Guardando posición actual...");
+        console.log("💾 Posición guardada.");
     }
 
-    // El porcentaje siempre intenta actualizarse si las locaciones existen
+    // 2. Lógica de Interfaz (Lo que mencionaste)
+    // Si el mapa ya cargó, actualizamos el texto de "Posición: X%"
     if (locationsReady) {
         actualizarPorcentajeManual(cfi);
     }
