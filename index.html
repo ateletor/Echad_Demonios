@@ -11,10 +11,12 @@
 
     <style>
         body {
-    margin: 0;
+  margin: 0;
     padding: 0;
     overflow: hidden; 
+    /* Fix para móviles: usa todo el alto disponible real */
     height: 100vh;
+    height: 100dvh; 
     display: flex;
     flex-direction: column;
 }
@@ -29,6 +31,7 @@
     padding: 5px;
     gap: 5px;
 	background: #2c3e50;
+	flex-shrink: 0; /* No permite que la barra se encoja */
 }
 
 #search-container {
@@ -56,15 +59,12 @@
 
 /* Contenedor del libro */
 #viewer {
-    flex: 1; /* Ocupa todo el espacio restante */
+    flex-grow: 1; /* El libro toma TODO el espacio restante */
     width: 100%;
-    max-width: 100%; /* Evita que se salga de la pantalla */
-    background: #fff;
-	box-shadow: 0 0 20px rgba(0,0,0,0.2);
-	margin: 0 auto;
-	height: 80vh;
-	overflow: scroll; /* El visor interno se encarga del scroll/paginación */
     position: relative;
+    overflow: hidden; /* El scroll lo maneja el iframe interno */
+    background: #fff;
+    /* Eliminamos el height: 80vh porque Flexbox hará el cálculo */
 }
 
         .nav-btn {
@@ -130,8 +130,10 @@
 }
 
 #viewer iframe {
+    display: block;
     width: 100% !important;
     height: 100% !important;
+    border: none;
 }
     </style>
 </head>
@@ -218,7 +220,7 @@
         // Esto ayuda si el PDF original era letra muy pequeña
         rendition.themes.default({
 			"body": {
-				"padding": "0 10px !important", // Menos margen en los lados
+				"padding": "0 15px 40px 15px !important", // 40px de "aire" abajo, // Menos margen en los lados
 				"font-family": "sans-serif !important"
 			},
 			"p": {
@@ -420,18 +422,7 @@ function actualizarPorcentajeManual(cfi, intentos = 0) {
     }
 }
 
-// 3. Evento de navegación
-rendition.on("relocated", (location) => {
-    const cfi = location.start.cfi;
-    
-    // SOLO guardamos si no estamos en medio de la reanudación inicial
-    if (!isResuming && cfi) {
-        localStorage.setItem("lastBookLocation", cfi);
-        console.log("💾 Posición guardada.");
-    }
-    
-    actualizarPorcentajeManual(cfi); 
-});
+
 
     };
 </script>
