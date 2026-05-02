@@ -123,5 +123,5 @@
     height: 100% !important;
     border: none;
 	padding-bottom: env(safe-area-inset-bottom);
-	padding-bottom: 20px !important;
+	padding-bottom: 5px !important;
 }
