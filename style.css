@@ -3,8 +3,8 @@
     padding: 0;
     overflow: hidden; 
     /* Fix para móviles: usa todo el alto disponible real */
-    height: 100vh; 
-    height: 100dvh;
+    height: 95vh; 
+    height: 95dvh;
     display: flex;
     flex-direction: column;
 }
@@ -123,5 +123,5 @@
     height: 100% !important;
     border: none;
 	padding-bottom: env(safe-area-inset-bottom);
-	padding-bottom: 30px !important;
+	padding-bottom: 20px !important;
 }
